@@ -7,13 +7,10 @@ import { serve } from "inngest/express";
 import { inngest, functions } from "./lib/inngest.js";
 const app = express();
 
-const corsOptions = {
-    origin: ENV.CLIENT_URL || true,
-    credentials: true,
-};
+
 
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 
 
 const __dirname = path.resolve();
