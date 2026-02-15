@@ -2,12 +2,9 @@ import express from "express";
 import { ENV } from "./lib/env.js";
 import { connectDB } from "./lib/db.js";
 import path from "path";
-import { fileURLToPath } from "url";
 import cors from "cors";
 import { serve } from "inngest/express";
 import { inngest, functions } from "./lib/inngest.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 const corsOptions = {
@@ -19,6 +16,7 @@ app.use(express.json());
 app.use(cors(corsOptions));
 
 
+const __dirname = path.resolve();
 app.use("/api/ingest", serve({ client: inngest, functions }));
 
 app.get("/api/health", (req, res) => {
@@ -26,10 +24,10 @@ app.get("/api/health", (req, res) => {
 });
 
 if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+  app.get("/{*any}", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
   });
 }
 
