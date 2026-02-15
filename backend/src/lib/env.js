@@ -8,8 +8,8 @@ export const ENV = {
     DB_URL:process.env.DB_URL,
     NODE_ENV:process.env.NODE_ENV,
     CLIENT_URL:process.env.CLIENT_URL,
-    INGEST_EVENT_KEY:process.env.INGEST_EVENT_KEY,
-    INGEST_SIGNIN_KEY:process.env.INGEST_SIGNIN_KEY,
+    INNGEST_EVENT_KEY:process.env.INNGEST_EVENT_KEY,
+    INNGEST_SIGNIN_KEY:process.env.INNGEST_SIGNIN_KEY,
     STREAM_API_KEY:process.env.STREAM_API_KEY,
     STREAM_SECRET_KEY:process.env.STREAM_SECRET_KEY,
 };
