@@ -12,4 +12,4 @@ export const ENV = {
     INNGEST_SIGNIN_KEY:process.env.INNGEST_SIGNIN_KEY,
     STREAM_API_KEY:process.env.STREAM_API_KEY,
     STREAM_SECRET_KEY:process.env.STREAM_SECRET_KEY,
-};
+};  
