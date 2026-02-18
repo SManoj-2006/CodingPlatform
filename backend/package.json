@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "vercel-start":"node src/server.js"
+    "vercel-start": "node src/server.js"
   },
   "type": "module",
   "keywords": [],
@@ -18,7 +18,8 @@
     "express": "^5.1.0",
     "inngest": "^3.44.3",
     "mern": "file:..",
-    "mongoose": "^8.19.1"
+    "mongoose": "^8.19.1",
+    "stream-chat": "^9.24.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
