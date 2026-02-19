@@ -1,5 +1,5 @@
 import express from "express"
-import { protectRoute } from "../middleware/protectRoute.js"
+import { protectRoute } from "../middleware/ProtectRoute.js"
 import { createSession,getActiveSessions,getMyRecentSessions,getSessionById,joinSession,endSession } from "../controllers/sessionController.js"
 const router = express.Router()
 
