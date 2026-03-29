@@ -152,7 +152,7 @@ Invoke-RestMethod -Method Get -Uri http://localhost:2000/api/v2/runtimes
 - corrected Stream user image payload
 - robust Piston execute URL handling for hosted and self-hosted bases
 
-## Final-Year Demo Checklist
+## Demo Checklist
 
 - sign in with two Clerk accounts
 - create session from account A
