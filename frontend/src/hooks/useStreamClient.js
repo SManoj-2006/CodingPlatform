@@ -1,36 +1,91 @@
-import { TrophyIcon, UsersIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { StreamChat } from "stream-chat";
+import toast from "react-hot-toast";
+import { initializeStreamClient, disconnectStreamClient } from "../lib/stream";
+import { sessionApi } from "../api/sessions";
 
-function StatsCards({ activeSessionsCount, recentSessionsCount }) {
-  return (
-    <div className="lg:col-span-1 grid grid-cols-1 gap-6">
-      {/* Active Count */}
-      <div className="card bg-base-100 border-2 border-primary/20 hover:border-primary/40">
-        <div className="card-body">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-3 bg-primary/10 rounded-2xl">
-              <UsersIcon className="w-7 h-7 text-primary" />
-            </div>
-            <div className="badge badge-primary">Live</div>
-          </div>
-          <div className="text-4xl font-black mb-1">{activeSessionsCount}</div>
-          <div className="text-sm opacity-60">Active Sessions</div>
-        </div>
-      </div>
+function useStreamClient(session, loadingSession, isHost, isParticipant) {
+  const [streamClient, setStreamClient] = useState(null);
+  const [call, setCall] = useState(null);
+  const [chatClient, setChatClient] = useState(null);
+  const [channel, setChannel] = useState(null);
+  const [isInitializingCall, setIsInitializingCall] = useState(true);
 
-      {/* Recent Count */}
-      <div className="card bg-base-100 border-2 border-secondary/20 hover:border-secondary/40">
-        <div className="card-body">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-3 bg-secondary/10 rounded-2xl">
-              <TrophyIcon className="w-7 h-7 text-secondary" />
-            </div>
-          </div>
-          <div className="text-4xl font-black mb-1">{recentSessionsCount}</div>
-          <div className="text-sm opacity-60">Total Sessions</div>
-        </div>
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    let videoCall = null;
+    let chatClientInstance = null;
+
+    const initCall = async () => {
+      if (!session?.callId) return;
+      if (!isHost && !isParticipant) return;
+      if (session.status === "completed") return;
+
+      try {
+        const { token, userId, userName, userImage } = await sessionApi.getStreamToken();
+
+        const client = await initializeStreamClient(
+          {
+            id: userId,
+            name: userName,
+            image: userImage,
+          },
+          token
+        );
+
+        setStreamClient(client);
+
+        videoCall = client.call("default", session.callId);
+        await videoCall.join({ create: true });
+        setCall(videoCall);
+
+        const apiKey = import.meta.env.VITE_STREAM_API_KEY;
+        chatClientInstance = StreamChat.getInstance(apiKey);
+
+        await chatClientInstance.connectUser(
+          {
+            id: userId,
+            name: userName,
+            image: userImage,
+          },
+          token
+        );
+        setChatClient(chatClientInstance);
+
+        const chatChannel = chatClientInstance.channel("messaging", session.callId);
+        await chatChannel.watch();
+        setChannel(chatChannel);
+      } catch (error) {
+        toast.error("Failed to join video call");
+        console.error("Error init call", error);
+      } finally {
+        setIsInitializingCall(false);
+      }
+    };
+
+    if (session && !loadingSession) initCall();
+
+    // cleanup - performance reasons
+    return () => {
+      // iife
+      (async () => {
+        try {
+          if (videoCall) await videoCall.leave();
+          if (chatClientInstance) await chatClientInstance.disconnectUser();
+          await disconnectStreamClient();
+        } catch (error) {
+          console.error("Cleanup error:", error);
+        }
+      })();
+    };
+  }, [session, loadingSession, isHost, isParticipant]);
+
+  return {
+    streamClient,
+    call,
+    chatClient,
+    channel,
+    isInitializingCall,
+  };
 }
 
-export default StatsCards;
+export default useStreamClient;

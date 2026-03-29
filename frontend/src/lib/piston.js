@@ -1,11 +1,9 @@
-// Piston API is a service for code execution
-
-const PISTON_API = "https://emkc.org/api/v2/piston";
+import axiosInstance from "./axios";
 
 const LANGUAGE_VERSIONS = {
   javascript: { language: "javascript", version: "18.15.0" },
   python: { language: "python", version: "3.10.0" },
-  java: { language: "java", version: "17.0.1" },
+  java: { language: "java", version: "15.0.2" },
 };
 
 /**
@@ -24,31 +22,18 @@ export async function executeCode(language, code) {
       };
     }
 
-    const response = await fetch(`${PISTON_API}/execute`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        language: languageConfig.language,
-        version: languageConfig.version,
-        files: [
-          {
-            name: `main.${getFileExtension(language)}`,
-            content: code,
-          },
-        ],
-      }),
+    const response = await axiosInstance.post("/code/execute", {
+      language: languageConfig.language,
+      version: languageConfig.version,
+      files: [
+        {
+          name: `main.${getFileExtension(language)}`,
+          content: code,
+        },
+      ],
     });
 
-    if (!response.ok) {
-      return {
-        success: false,
-        error: `HTTP error! status: ${response.status}`,
-      };
-    }
-
-    const data = await response.json();
+    const data = response.data;
 
     const output = data.run.output || "";
     const stderr = data.run.stderr || "";
@@ -66,9 +51,10 @@ export async function executeCode(language, code) {
       output: output || "No output",
     };
   } catch (error) {
+    const upstreamMessage = error?.response?.data?.message;
     return {
       success: false,
-      error: `Failed to execute code: ${error.message}`,
+      error: upstreamMessage || `Failed to execute code: ${error.message}`,
     };
   }
 }

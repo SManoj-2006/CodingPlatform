@@ -1,5 +1,6 @@
 import { chatClient, streamClient } from "../lib/stream.js";
 import Session from "../models/Session.js";
+import mongoose from "mongoose";
 
 export async function createSession(req, res) {
   try {
@@ -79,6 +80,10 @@ export async function getSessionById(req, res) {
   try {
     const { id } = req.params;
 
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
+
     const session = await Session.findById(id)
       .populate("host", "name email profileImage clerkId")
       .populate("participant", "name email profileImage clerkId");
@@ -98,6 +103,10 @@ export async function joinSession(req, res) {
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
 
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
+
     const session = await Session.findById(id);
 
     if (!session) return res.status(404).json({ message: "Session not found" });
@@ -110,14 +119,20 @@ export async function joinSession(req, res) {
       return res.status(400).json({ message: "Host cannot join their own session as participant" });
     }
 
+    // idempotent return for participant refreshes/retries
+    if (session.participant?.toString() === userId.toString()) {
+      return res.status(200).json({ session });
+    }
+
     // check if session is already full - has a participant
     if (session.participant) return res.status(409).json({ message: "Session is full" });
 
-    session.participant = userId;
-    await session.save();
-
     const channel = chatClient.channel("messaging", session.callId);
     await channel.addMembers([clerkId]);
+
+    // persist participant only after stream membership succeeds
+    session.participant = userId;
+    await session.save();
 
     res.status(200).json({ session });
   } catch (error) {
@@ -130,6 +145,10 @@ export async function endSession(req, res) {
   try {
     const { id } = req.params;
     const userId = req.user._id;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
 
     const session = await Session.findById(id);
 
