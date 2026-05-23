@@ -119,6 +119,14 @@ Services:
 - Piston API: `http://localhost:2000/api/v2`
 - MongoDB: `mongodb://localhost:27017`
 
+Note: If you already run a Piston container on the host (for example `piston_api`),
+the backend can be configured to use that container instead of the compose-managed
+Piston. Set `PISTON_API_URL` in `backend/.env` or in `docker-compose.yml` to
+`http://host.docker.internal:2000/api/v2` so the backend container will reach the
+host-bound Piston instance. Alternatively, connect your existing container to
+the Compose network or remove the compose piston service to avoid duplicate
+containers.
+
 ## Self-Hosted Piston Setup (No Public Token Needed)
 
 1. Run Piston container:

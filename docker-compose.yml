@@ -56,7 +56,9 @@ services:
       NODE_ENV: development
       DB_URL: mongodb://mongo:27017/codecollab
       CLIENT_URL: http://localhost:5173
-      PISTON_API_URL: http://piston:2000/api/v2
+      # use host.docker.internal so the backend container can reach an existing
+      # piston_api container that is bound to the host port 2000
+      PISTON_API_URL: http://host.docker.internal:2000/api/v2
     ports:
       - "3000:3000"
     volumes:
